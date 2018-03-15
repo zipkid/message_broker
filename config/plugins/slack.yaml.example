@@ -1,0 +1,14 @@
+---
+:active: true
+:instances:
+  - :listener: true
+    :name: bot-instance1
+    :token: xoxb-<token>
+    # :channels:
+    #   - testing
+    #   - random
+  - :listener: true
+    :name: bot-instance2
+    :token: xoxb-<token>
+    # :channels:
+    #   - random

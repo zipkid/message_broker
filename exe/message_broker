@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+
+require 'message_broker'
+
+require 'getoptlong'
+require 'logger'
+require 'yaml'
+require 'pp'
+
+opts = GetoptLong.new(
+  ['--help', '-h', GetoptLong::NO_ARGUMENT],
+  ['--configdir', '-c', GetoptLong::OPTIONAL_ARGUMENT],
+  ['--logfile', '-l', GetoptLong::REQUIRED_ARGUMENT],
+  ['--debug', '-d', GetoptLong::OPTIONAL_ARGUMENT]
+)
+
+program_basename = File.basename($PROGRAM_NAME, '.rb')
+config_file = "#{program_basename}.yaml"
+# config_file = File.expand_path("/etc/message_broker/#{program_basename}.yaml", __FILE__)
+config_dir = '/etc/message_broker'
+
+logfile = "#{program_basename}.log"
+debug = 0
+
+opts.each do |opt, arg|
+  case opt
+  when '--help'
+    puts <<-DOC
+    #{$PROGRAM_NAME} [OPTION]
+
+    -h, --help:
+    show help
+
+    -c, --configdir <directory>:
+    Config dir to use. (Default: #{config_dir})
+
+    -l, --logfile <file>:
+    Log file. (Default: #{logfile})
+
+    -d, --debug [level]:
+    Debug level
+    DOC
+    exit
+  when '--configdir'
+    config_dir = arg
+  when '--logfile'
+    logfile = arg
+  when '--debug'
+    debug = if arg
+              1
+            else
+              arg
+            end
+  end
+end
+
+# log_level = %w[DEBUG INFO WARN ERROR FATAL UNKNOWN]
+
+conf = YAML.load_file File.join("#{config_dir}/#{config_file}") if File.exist?("#{config_dir}/#{config_file}")
+conf = {} if conf.nil?
+
+log = Logger.new(logfile, 'monthly')
+# DEBUG < INFO < WARN < ERROR < FATAL < UNKNOWN
+# log.level = Logger::ERROR
+
+# ENV['SSL_CERT_FILE'] = conf[:ssl_cert_file] if conf.key? :ssl_cert_file
+
+log.debug("Starting #{$PROGRAM_NAME}")
+
+MessageBroker.new(log: log, config: conf, config_dir: config_dir).run
+
+# vim:set fileencoding=utf8 fileformat=unix filetype=ruby tabstop=2 expandtab:
